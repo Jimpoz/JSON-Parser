@@ -1,0 +1,3 @@
+/Users/jimpo/Desktop/JSON Parser/cmake-build-debug/CMakeFiles/JSON_Parser.dir
+/Users/jimpo/Desktop/JSON Parser/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/jimpo/Desktop/JSON Parser/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,4 @@
+# ninja log v5
+3	2106	1695240617528637405	CMakeFiles/JSON_Parser.dir/test_json.cpp.o	82da3f84ebff85a5
+1	2166	1695240617597641847	CMakeFiles/JSON_Parser.dir/json.cpp.o	4eb07519fb61807e
+2166	2308	1695240617744652443	JSON_Parser	fdba6a3d7ed92f08
