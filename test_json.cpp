@@ -54,8 +54,10 @@ int main()
 
         //std::cout<<j["test"]<<std::endl;
         //std::cout<<j["jhukj"]<<std::endl;
+        std::cout<<j["first key"]<<"\n";
+        std::cout<<j["second key"]<<"\n";
+        std::cout<<j["third key"]<<"\n";
         std::cout<<j;
-
 
 
         //std::cout<<j<<"\n"<<j.is_list()<<std::endl;

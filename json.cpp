@@ -389,33 +389,28 @@ json::~json() {
 //assignment operator
 json& json::operator=(json const& other) {
     if (this != &other) {
-        if(other.is_bool()){
+        if(other.is_null()){
+            set_null();
+        }else if(other.is_bool()){
             set_bool(other.get_bool());
         }else if(other.is_number()){
             set_number(other.get_number());
         }else if(other.is_string()){
             set_string(other.get_string());
-        }else if(other.is_null()){
-            set_null();
         }else if(other.is_list()){
             set_list();
-            json::const_list_iterator begin = other.begin_list();
-            json::const_list_iterator end = other.end_list();
-
-            while(begin!=end){
-                push_back(begin.current->info);
+            json::const_list_iterator iter = other.begin_list();
+            while(iter!= nullptr){
+                push_back(iter.current->info);
+                iter++;
             }
-            push_back(end.current->info);
         }else if(other.is_dictionary()){
             set_dictionary();
-
-            json::const_dictionary_iterator begin = other.begin_dictionary();
-            json::const_dictionary_iterator end = other.end_dictionary();
-
-            while(begin!=end){
-                insert(begin.current->info);
+            json::const_dictionary_iterator iter = other.begin_dictionary();
+            while(iter!= nullptr){
+                insert(iter.current->info);
+                iter++;
             }
-            insert(end.current->info);
         }else{
             throw json_exception{"Other JSON is invalid"};
         }
@@ -433,19 +428,17 @@ json& json::operator=(json &&other){
         }else if(other.is_number()){
             set_number(other.get_number());
         }else if(other.is_string()){
-            set_string(other.get_string());
+                set_string(other.get_string());
         }else if(other.is_list()){
             set_list();
             this->pimpl->head = other.pimpl->head;
             this->pimpl->tail = other.pimpl->tail;
-            other.pimpl->head = nullptr;
-            other.pimpl->tail = nullptr;
+            other.pimpl->head = other.pimpl->tail = nullptr;
         }else if(other.is_dictionary()){
             set_dictionary();
             this->pimpl->head_dict = other.pimpl->head_dict;
             this->pimpl->tail_dict = other.pimpl->tail_dict;
-            other.pimpl->head_dict = nullptr;
-            other.pimpl->tail_dict = nullptr;
+            other.pimpl->head_dict = other.pimpl->tail_dict = nullptr;
         }else{
             throw json_exception{"Other JSON is invalid"};
         }
@@ -697,6 +690,7 @@ json& json::operator[](std::string const& key) {
 
 json parse(std::string& str) {
     json res;
+
     size_t first_non_space = str.find_first_not_of(" \t\n\r");
     if (first_non_space != std::string::npos) {
         str = str.substr(first_non_space);
@@ -706,7 +700,7 @@ json parse(std::string& str) {
         str = str.substr(0, last_non_space + 1);
     }
 
-    if (str.empty() or str == "null") {
+    if (str.empty() || str == "null") {
         res.set_null();
     } else if (str == "true") {
         res.set_bool(true);
@@ -714,230 +708,123 @@ json parse(std::string& str) {
         res.set_bool(false);
     } else if (isdigit(str[0]) || (str[0] == '-' && isdigit(str[1]))) {
         res.set_number(std::stod(str));
-    }else if(str.at(0)=='[' and str.at(1)==']'){
-        res.set_list(); //TODO fix the empty list
-    }else if (str[0] == '[') {
+    } else if (str.at(0) == '[' && str.at(1) == ']') {
+        res.set_list(); // Empty list
+    } else if (str[0] == '[') {
         res.set_list();
-        size_t start = str.find("[") + 1;
-        size_t end_row = str.find(",", start);
-
-        while (end_row != std::string::npos) {
-            std::string element = str.substr(start, end_row - start);
-            size_t first_non_space = element.find_first_not_of(" \t\n\r");
-            if (first_non_space != std::string::npos) {
-                element = element.substr(first_non_space);
-            }
-            size_t last_non_space = element.find_last_not_of(" \t\n\r");
-            if (last_non_space != std::string::npos) {
-                element = element.substr(0, last_non_space + 1);
-            }
-
-            if (element.empty() or element[1] == ']') {
-                json tmp;
-                tmp.set_null();
-                res.push_back(tmp);
-                break;
-            } else if (element[0] == '[') {
-                int count = 0;
-                size_t end_list = start;
-                for (size_t i = start; i < str.size(); ++i) {
-                    if (str[i] == '[') {
-                        count++;
-                    } else if (str[i] == ']') {
-                        count--;
-                        if (count == 0) {
-                            end_list = i;
-                            break;
-                        }
-                    }
-                }
-                if (count != 0) {
-                    throw json_exception{"Invalid JSON"};
-                }
-                std::string list = str.substr(start, end_list - start + 1);
-                res.push_back(parse(list));
-                start = end_list + 2;
-            } else {
-                res.push_back(parse(element));
-                start = end_row + 1;
-            }
-            end_row = str.find(",", start);
+        size_t start = 1; // Start parsing after '['
+        size_t end_list = str.rfind("]"); // Find the last ']'
+        if (end_list == std::string::npos) {
+            throw json_exception{"Invalid JSON"};
         }
-        std::string last_element = str.substr(start, str.size() - start - 1);
-        if (!last_element.empty()) {
-            res.push_back(parse(last_element));
+        std::string list_str = str.substr(start, end_list - start);
+
+        // Parse elements in the list
+        size_t pos = 0;
+        while (pos < list_str.length()) {
+            size_t end_element = list_str.find_first_of(",", pos);
+            if (end_element == std::string::npos) {
+                end_element = list_str.length();
+            }
+            std::string element = list_str.substr(pos, end_element - pos);
+
+            // Parse value
+            json value = parse(element);
+
+            res.push_back(value);
+
+            // Move to the next element
+            pos = end_element + 1;
         }
-    } else if (str[0] == '{') {
-        //TODO implement dictionary logic
-        //note: the dictionary has a method called insert(std::pair<std::string,json>)
-        //fix nested list and dictionaries
+    }else if (str[0] == '{') {
         res.set_dictionary();
-        size_t start = str.find("{") + 1;
-        size_t end_row = str.find(",", start);
 
-        while (end_row != std::string::npos) {
-            std::string pair = str.substr(start, end_row - start);
-            size_t first_non_space = pair.find_first_not_of(" \t\n\r");
-            if (first_non_space != std::string::npos) {
-                pair = pair.substr(first_non_space);
-            }
-            size_t last_non_space = pair.find_last_not_of(" \t\n\r");
-            if (last_non_space != std::string::npos) {
-                pair = pair.substr(0, last_non_space + 1);
+        size_t start = 1; // Parse after the first opening bracket
+        size_t end_dict = str.rfind('}'); // Find the last closing bracket '}'
+
+        if (end_dict == std::string::npos) {
+            throw json_exception{"Invalid JSON type"};
+        }
+
+        std::string dict_str = str.substr(start, end_dict - start);
+        size_t pos = 0;
+
+        while (pos < dict_str.length()) {
+            // Find the end of the key (which is a string)
+            size_t key_start = dict_str.find_first_not_of(" \t\n\r", pos);
+            if (key_start == std::string::npos) {
+                throw json_exception{"Invalid JSON type"};
             }
 
-            if (pair.empty() or pair[0] == '}') {
-                break;
+            if (dict_str[key_start] != '"') {
+                throw json_exception{"Invalid JSON type"};
+            }
+
+            size_t key_end = dict_str.find('"', key_start + 1);
+            if (key_end == std::string::npos) {
+                throw json_exception{"Invalid JSON type"};
+            }
+
+            std::string key = dict_str.substr(key_start + 1, key_end - key_start - 1);
+
+            // Adjust pos to start parsing after the key and any spaces
+            pos = key_end + 1;
+            pos = dict_str.find_first_not_of(" \t\n\r", pos);
+
+            if (pos == std::string::npos || dict_str[pos] != ':') {
+                throw json_exception{"Invalid JSON type"};
+            }
+
+            // Adjust pos to start parsing after the ':' character
+            pos++;
+
+            // Find the end of the value
+            size_t end_value = dict_str.find_first_of(',', pos);
+            if (end_value == std::string::npos) {
+                end_value = dict_str.length();
+            }
+
+            std::string value = dict_str.substr(pos, end_value - pos);
+
+            // Parse value
+            json val;
+
+            if (value[0] == '[' || value[0] == '{') {
+                // Handle nested arrays or dictionaries
+                int nested_count = 0;
+                size_t end_nested = pos;
+
+                do {
+                    if (dict_str[end_nested] == '[' || dict_str[end_nested] == '{') {
+                        nested_count++;
+                    } else if (dict_str[end_nested] == ']' || dict_str[end_nested] == '}') {
+                        nested_count--;
+                    }
+                    end_nested++;
+                } while (nested_count > 0 && end_nested < dict_str.length());
+
+                if (nested_count != 0) {
+                    throw json_exception{"Invalid JSON type"};
+                }
+
+                std::string nested_obj = dict_str.substr(pos, end_nested - pos);
+                val = parse(nested_obj);
+                pos = end_nested;
             } else {
-                size_t colon_pos = pair.find(":");
-                if (colon_pos == std::string::npos) {
-                    throw json_exception{"Invalid JSON"};
-                }
-                std::string key = pair.substr(0, colon_pos);
-                std::string value_str = pair.substr(colon_pos + 1);
-                size_t first_non_space_value = value_str.find_first_not_of(" \t\n\r");
-                if (first_non_space_value != std::string::npos) {
-                    value_str = value_str.substr(first_non_space_value);
-                }
-
-                if (value_str == "true") {
-                    json tmp;
-                    tmp.set_bool(true);
-                    res.insert(std::make_pair(key, tmp));
-                } else if (value_str == "false") {
-                    json tmp;
-                    tmp.set_bool(false);
-                    res.insert(std::make_pair(key, tmp));
-                } else if (value_str == "null") {
-                    json tmp;
-                    tmp.set_null();
-                    res.insert(std::make_pair(key, tmp));
-                } else if (value_str[0] == '{') {
-                    // Find the closing bracket of the subdictionary
-                    int count = 0;
-                    size_t sub_dict_end = start;
-                    for (size_t i = start; i < str.size(); ++i) {
-                        if (str[i] == '{') {
-                            count++;
-                        } else if (str[i] == '}') {
-                            count--;
-                            if (count == 0) {
-                                sub_dict_end = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (count != 0) {
-                        throw json_exception{"Invalid JSON"};
-                    }
-                    std::string sub_dict = str.substr(colon_pos, sub_dict_end - start + 1);
-                    res.insert(std::make_pair(key, parse(sub_dict)));
-                    start = sub_dict_end + 1;
-                } else if(value_str[0]=='['){
-
-                    int i=str.size()-1;
-                    size_t end_inner_list;
-                    while(i>0){
-                        if(str.at(i)==']'){
-                            end_inner_list=i;
-                            break;
-                        }
-                        i--;
-                    }
-                    std::string list_in = str.substr(start, end_inner_list - start + 1);
-                    res.insert(std::make_pair(key,parse(list_in)));
-
-                    int count = 0;
-                    size_t end_list = start;
-                    for (size_t i = start; i < str.size(); ++i) {
-                        if (str[i] == '[') {
-                            count++;
-                        } else if (str[i] == ']') {
-                            count--;
-                            if (count == 0) {
-                                end_list = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (count != 0) {
-                        throw json_exception{"Invalid JSON"};
-                    }
-                    std::string list = str.substr(start, end_list - start + 1);
-                    res.insert(std::make_pair(key,(parse(list))));
-                    start = end_list + 2;
-                }else {
-                    size_t last_non_space_value = value_str.find_last_not_of(" \t\n\r");
-                    if (last_non_space_value != std::string::npos) {
-                        value_str = value_str.substr(0, last_non_space_value + 1);
-                    }
-                    res.insert(std::make_pair(key, parse(value_str)));
-                }
+                // Handle simple values (string, number, null, boolean)
+                val = parse(value);
             }
-            start = end_row + 1;
-            end_row = str.find(",", start);
+
+            // Insert key-value pair
+            res.insert(std::make_pair(key, val));
+
+            // Move to the next key-value pair
+            pos = end_value + 1;
         }
-        std::string last_pair = str.substr(start, str.size() - start - 1);
-        if (!last_pair.empty()) {
-            size_t colon_pos = last_pair.find(":");
-            if (colon_pos == std::string::npos) {
-                throw json_exception{"Invalid JSON"};
-            }
-            std::string last_key = last_pair.substr(0, colon_pos);
-            size_t non_space_last_key=last_key.find_first_not_of(" \t\n\r");
-            if(non_space_last_key!=std::string::npos){
-                last_key = last_key.substr(non_space_last_key);
-            }
-            std::string last_value_str = last_pair.substr(colon_pos + 1);
-            size_t first_non_space_last_value = last_value_str.find_first_not_of(" \t\n\r");
-            if (first_non_space_last_value != std::string::npos) {
-                last_value_str = last_value_str.substr(first_non_space_last_value);
-            }
-
-            if (last_value_str == "true") {
-                json tmp;
-                tmp.set_bool(true);
-                res.insert(std::make_pair(last_key, tmp));
-            } else if (last_value_str == "false") {
-                json tmp;
-                tmp.set_bool(false);
-                res.insert(std::make_pair(last_key, tmp));
-            } else if (last_value_str == "null") {
-                json tmp;
-                tmp.set_null();
-                res.insert(std::make_pair(last_key, tmp));
-            } else if (last_value_str[0] == '{') {
-                // Parse subdictionary
-                int count = 0;
-                size_t end_dict = start;
-                for (size_t i = start; i < str.size(); ++i) {
-                    if (str[i] == '{') {
-                        count++;
-                    } else if (str[i] == '}') {
-                        count--;
-                        if (count == 0) {
-                            end_dict = i;
-                            break;
-                        }
-                    }
-                }
-                if (count != 0) {
-                    throw json_exception{"Invalid JSON"};
-                }
-                std::string sub_dict_str = str.substr(start, end_dict - start + 1);
-                res.insert(std::make_pair(last_key, parse(sub_dict_str)));
-            }else {
-                size_t last_non_space_last_value = last_value_str.find_last_not_of(" \t\n\r");
-                if (last_non_space_last_value != std::string::npos) {
-                    last_value_str = last_value_str.substr(0, last_non_space_last_value + 1);
-                }
-                res.insert(std::make_pair(last_key, parse(last_value_str)));
-            }
-        }
-    } else if (str[0] == '"') {
+    }else if (str[0] == '"') {
         size_t start = str.find("\"");
         size_t end = str.find("\"", start + 1);
-        std::string extracted = str.substr(start + 1, end - 1);
+        std::string extracted = str.substr(start + 1, end - start - 1);
         res.set_string(extracted);
     } else {
         throw json_exception{"Invalid JSON type"};
@@ -945,36 +832,40 @@ json parse(std::string& str) {
     return res;
 }
 
+
 //output of the json object
 std::ostream& operator<<(std::ostream& lhs, json const& rhs) {
     //turn the json into a string and then print it
-    if(rhs.is_bool()){
+    if(rhs.is_null()){
+        lhs << "null";
+    }else if(rhs.is_bool()){
         lhs<< (rhs.get_bool() ? "true" : "false");
-    }else if(rhs.is_string()){
-        lhs << rhs.get_string();
     }else if(rhs.is_number()){
         lhs << rhs.get_number();
-    }else if(rhs.is_null()){
-        lhs << "null";
+    }else if(rhs.is_string()){
+        lhs << rhs.get_string();
     }else if(rhs.is_list()){
         lhs << "[";
-        json::const_list_iterator begin = rhs.begin_list();
-        json::const_list_iterator end = rhs.end_list();
-        while(begin!=end){
-            lhs<<begin.current->info<<", ";
-            ++begin;
+        json::const_list_iterator iter = rhs.begin_list();
+        while(iter!=nullptr){
+            lhs<<iter.current->info;
+            if(iter.current->next){
+                lhs<<", ";
+            }
+            iter++;
         }
-        lhs<<begin.current->info;
         lhs << "]";
     }else if(rhs.is_dictionary()){
-        json::const_dictionary_iterator begin = rhs.begin_dictionary();
-        json::const_dictionary_iterator end = rhs.end_dictionary();
-        lhs << "{ ";
-        while(begin !=end){
-            lhs <<begin.get_key() << ": " << begin.get_value()<<", " ;
-            begin++;
+        json::const_dictionary_iterator iter = rhs.begin_dictionary();
+        lhs<<"{";
+        while(iter!=nullptr){
+            lhs<<iter.get_key()<<": "<<iter.get_value();
+            if(iter.current->next){
+                lhs<<", ";
+            }
+            iter++;
         }
-        lhs << begin.get_key() << ": " << begin.get_value()<<" }";
+        lhs<<"}";
     }else{
         lhs<<"JSON is either NULL or invalid";
     }
