@@ -1,5 +1,3 @@
 {
-  "first key": 22344.3,
-  "second key": "aonjsak",
-  "third key": {"first subkey":  [null, false, 213.123, "test"]}
+  "third key": {"first subkey": [ "test", null, false, 21312.341]}
 }

@@ -712,29 +712,54 @@ json parse(std::string& str) {
         res.set_list(); // Empty list
     } else if (str[0] == '[') {
         res.set_list();
-        size_t start = 1; // Start parsing after '['
-        size_t end_list = str.rfind("]"); // Find the last ']'
-        if (end_list == std::string::npos) {
-            throw json_exception{"Invalid JSON"};
-        }
-        std::string list_str = str.substr(start, end_list - start);
+        size_t start = str.find("[") + 1;
+        size_t end_row = str.find(",", start);
 
-        // Parse elements in the list
-        size_t pos = 0;
-        while (pos < list_str.length()) {
-            size_t end_element = list_str.find_first_of(",", pos);
-            if (end_element == std::string::npos) {
-                end_element = list_str.length();
+        while (end_row != std::string::npos) {
+            std::string element = str.substr(start, end_row - start);
+            size_t first_non_space = element.find_first_not_of(" \t\n\r");
+            if (first_non_space != std::string::npos) {
+                element = element.substr(first_non_space);
             }
-            std::string element = list_str.substr(pos, end_element - pos);
+            size_t last_non_space = element.find_last_not_of(" \t\n\r");
+            if (last_non_space != std::string::npos) {
+                element = element.substr(0, last_non_space + 1);
+            }
 
-            // Parse value
-            json value = parse(element);
-
-            res.push_back(value);
-
-            // Move to the next element
-            pos = end_element + 1;
+            if (element.empty() or element[1] == ']') {
+                json tmp;
+                tmp.set_null();
+                res.push_back(tmp);
+                break;
+            } else if (element[0] == '[') {
+                int count = 0;
+                size_t end_list = start;
+                for (size_t i = start; i < str.size(); ++i) {
+                    if (str[i] == '[') {
+                        count++;
+                    } else if (str[i] == ']') {
+                        count--;
+                        if (count == 0) {
+                            end_list = i;
+                            break;
+                        }
+                    }
+                }
+                if (count != 0) {
+                    throw json_exception{"Invalid JSON"};
+                }
+                std::string list = str.substr(start, end_list - start + 1);
+                res.push_back(parse(list));
+                start = end_list + 2;
+            } else {
+                res.push_back(parse(element));
+                start = end_row + 1;
+            }
+            end_row = str.find(",", start);
+        }
+        std::string last_element = str.substr(start, str.size() - start - 1);
+        if (!last_element.empty()) {
+            res.push_back(parse(last_element));
         }
     }else if (str[0] == '{') {
         res.set_dictionary();
@@ -827,7 +852,6 @@ json parse(std::string& str) {
     }
     return res;
 }
-
 
 //output of the json object
 std::ostream& operator<<(std::ostream& lhs, json const& rhs) {
