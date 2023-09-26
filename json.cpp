@@ -739,16 +739,16 @@ json parse(std::string& str) {
     }else if (str[0] == '{') {
         res.set_dictionary();
 
-        size_t start = 1; // Parse after the first opening bracket
-        size_t end_dict = str.rfind('}'); // Find the last closing bracket '}'
+        size_t start = 1; // Parse after the first opening curly brace
+        size_t end_dict = str.rfind('}'); // Find the last closing curly brace '}'
 
         if (end_dict == std::string::npos) {
             throw json_exception{"Invalid JSON type"};
         }
 
-        std::string dict_str = str.substr(start, end_dict - start);
-        size_t pos = 0;
+        std::string dict_str = str.substr(start, end_dict - start + 1); // Include the closing curly brace
 
+        size_t pos = 0;
         while (pos < dict_str.length()) {
             // Find the end of the key (which is a string)
             size_t key_start = dict_str.find_first_not_of(" \t\n\r", pos);
@@ -785,43 +785,39 @@ json parse(std::string& str) {
             }
 
             std::string value = dict_str.substr(pos, end_value - pos);
+// Erase white spaces from the 'value' string
+            value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
+
 
             // Parse value
             json val;
-
-            if (value[0] == '[' || value[0] == '{') {
-                // Handle nested arrays or dictionaries
-                int nested_count = 0;
-                size_t end_nested = pos;
-
-                do {
-                    if (dict_str[end_nested] == '[' || dict_str[end_nested] == '{') {
-                        nested_count++;
-                    } else if (dict_str[end_nested] == ']' || dict_str[end_nested] == '}') {
-                        nested_count--;
-                    }
-                    end_nested++;
-                } while (nested_count > 0 && end_nested < dict_str.length());
-
-                if (nested_count != 0) {
-                    throw json_exception{"Invalid JSON type"};
+            if (value[0] == '{' || value[0] == '[') {
+                // Handle nested dictionaries or lists
+                size_t nested_end;
+                if (value[0] == '{') {
+                    nested_end = dict_str.rfind('}');
+                } else {
+                    nested_end = dict_str.rfind(']');
                 }
 
-                std::string nested_obj = dict_str.substr(pos, end_nested - pos);
+                if (nested_end == std::string::npos) {
+                    throw json_exception{"Invalid JSON - Unbalanced braces or brackets"};
+                }
+
+                std::string nested_obj = dict_str.substr(pos, nested_end - pos + 1);
                 val = parse(nested_obj);
-                pos = end_nested;
+                pos = nested_end + 2; // Move past the nested object and the following comma or end
             } else {
                 // Handle simple values (string, number, null, boolean)
                 val = parse(value);
+                pos = end_value + 1;
             }
 
             // Insert key-value pair
             res.insert(std::make_pair(key, val));
-
-            // Move to the next key-value pair
-            pos = end_value + 1;
         }
-    }else if (str[0] == '"') {
+    }
+    else if (str[0] == '"') {
         size_t start = str.find("\"");
         size_t end = str.find("\"", start + 1);
         std::string extracted = str.substr(start + 1, end - start - 1);
