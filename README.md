@@ -10,7 +10,31 @@ Project made entirely in C++
 
 ## Features
 
-- **Versatile `json` Class**: The `json` class can represent various JSON-like types, including objects, arrays, strings, numbers, booleans, and null values, thanks to an enumeration system.
+- **Versatile `json` Class**: The `json` class can represent various JSON-like types, including objects, arrays, strings, numbers, booleans, and null values, thanks to an enumeration system:
+```cpp
+enum type {
+    jnull,
+    jboolean,
+    jnumber,
+    jstring,
+    jlist,
+    jdict
+};
+
+struct json::impl{
+    type t;
+    double d;
+    bool b;
+    std::string s;
+
+    //heads and tails
+    lista_json head;
+    lista_json tail;
+
+    dizionario head_dict;
+    dizionario tail_dict;
+}
+```
 
 - **Custom Iterator**: The source file includes a custom iterator that simplifies the process of traversing JSON-like objects and arrays, allowing you to easily access and manipulate JSON-like data.
 
