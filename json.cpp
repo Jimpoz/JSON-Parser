@@ -322,12 +322,12 @@ public:
 
 //default constructor
 json::json() {
-    pimpl = new json::impl();
+    pimpl = new impl;
 }
 
 //copy constructor
 json::json(json const& other) {
-    pimpl = new json::impl();
+    pimpl = new impl;
 
     if (other.is_null()) {
         set_null();
@@ -341,38 +341,24 @@ json::json(json const& other) {
         set_list();
         pimpl->head = nullptr;
         lista_json src = other.pimpl->head;
-        lista_json dest = nullptr;
+        //lista_json dest = nullptr;
         while (src) {
             //use the push back instead
-            lista_json tmp = new node(*src);
-            if (!pimpl->head) {
-                pimpl->head = tmp;
-                dest = pimpl->head;
-            } else {
-                dest->next = tmp;
-                dest = dest->next;
-            }
+            this->push_back(src->info);
             src = src->next;
         }
-        pimpl->tail = dest;
+        pimpl->tail = src;
     } else if (other.is_dictionary()) {
         set_dictionary();
         pimpl->head_dict = nullptr;
         dizionario src = other.pimpl->head_dict;
-        dizionario dest = nullptr;
+        //dizionario dest = nullptr;
         while (src) {
             //use the insert instead
-            dizionario tmp = new dictionary(*src);
-            if (!pimpl->head_dict) {
-                pimpl->head_dict = tmp;
-                dest = pimpl->head_dict;
-            } else {
-                dest->next = tmp;
-                dest = dest->next;
-            }
+            this->insert(src->info);
             src = src->next;
         }
-        pimpl->tail_dict = dest;
+        pimpl->tail_dict = src;
     } else {
         throw json_exception{"Invalid JSON"};
     }
@@ -690,12 +676,12 @@ json& json::operator[](std::string const& key) {
             }
             begin++;
         }
-    }
-    if(flag==false){
-        insert(std::pair<std::string, json> (key, json()));
-        return pimpl->tail_dict->info.second;
-    }else{
-         return begin.current->info.second;
+        if(flag==false){
+            insert(std::pair<std::string, json> (key, json()));
+            return pimpl->tail_dict->info.second;
+        }else{
+            return begin.current->info.second;
+        }
     }
 }
 

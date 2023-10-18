@@ -58,6 +58,8 @@ int main()
         //std::cout<<j["third key"]<<"\n";
         std::cout<<j<<std::endl;
         std::cout<<j["first key"]<<"\n";
+        json j1(j);
+        std::cout<<j1;
 
 
         //std::cout<<j<<"\n"<<j.is_list()<<std::endl;
