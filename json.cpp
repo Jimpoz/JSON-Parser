@@ -377,7 +377,7 @@ json::~json() {
 //assignment operator
 json& json::operator=(json const& other) {
     if (this != &other) {
-        delete pimpl;
+        //delete pimpl;
         if(other.is_null()){
             set_null();
         }else if(other.is_bool()){
@@ -410,7 +410,7 @@ json& json::operator=(json const& other) {
 //move assignment
 json& json::operator=(json &&other){
     if (this != &other) {
-        delete pimpl;
+        //delete pimpl;
         if(other.is_null()){
             set_null();
         }else if(other.is_bool()){
