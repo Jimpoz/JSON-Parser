@@ -343,6 +343,7 @@ json::json(json const& other) {
         lista_json src = other.pimpl->head;
         lista_json dest = nullptr;
         while (src) {
+            //use the push back instead
             lista_json tmp = new node(*src);
             if (!pimpl->head) {
                 pimpl->head = tmp;
@@ -360,6 +361,7 @@ json::json(json const& other) {
         dizionario src = other.pimpl->head_dict;
         dizionario dest = nullptr;
         while (src) {
+            //use the insert instead
             dizionario tmp = new dictionary(*src);
             if (!pimpl->head_dict) {
                 pimpl->head_dict = tmp;
@@ -389,6 +391,7 @@ json::~json() {
 //assignment operator
 json& json::operator=(json const& other) {
     if (this != &other) {
+        delete pimpl;
         if(other.is_null()){
             set_null();
         }else if(other.is_bool()){
@@ -421,6 +424,7 @@ json& json::operator=(json const& other) {
 //move assignment
 json& json::operator=(json &&other){
     if (this != &other) {
+        delete pimpl;
         if(other.is_null()){
             set_null();
         }else if(other.is_bool()){
@@ -652,15 +656,23 @@ json const& json::operator[](std::string const& key) const {
     if(!is_dictionary()){
         throw json_exception{"Not a dictionary"};
     }else{
-        //find the index == key
+        //find the index == key using a boolean
+        bool flag = false;
         const_dictionary_iterator begin = begin_dictionary();
-        while(begin!= nullptr){
+        while(begin!= nullptr and !flag){
+            //if found it stops the while
             if(begin.current->info.first==key){
-                return begin.current->info.second;
+                flag = true;
             }
             begin++;
         }
-        throw json_exception{"Invalid key"};
+        //if the key was not found throws an error otherwise it returns the assigned value
+        if(flag==false){
+            throw json_exception{"The key was not found"};
+        }else{
+            return begin.current->info.second;
+        }
+        //throw json_exception{"Invalid key"};
     }
     return *this;
 }
@@ -672,10 +684,9 @@ json& json::operator[](std::string const& key) {
     }else{
         dictionary_iterator begin = begin_dictionary();
 
-        while(begin!= nullptr){
+        while(begin!= nullptr and !flag){
             if(begin.current->info.first==key){
                 flag=true;
-                return begin.current->info.second;
             }
             begin++;
         }
@@ -684,7 +695,7 @@ json& json::operator[](std::string const& key) {
         insert(std::pair<std::string, json> (key, json()));
         return pimpl->tail_dict->info.second;
     }else{
-        throw json_exception{"Invalid key"};
+         return begin.current->info.second;
     }
 }
 
