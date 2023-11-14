@@ -10,11 +10,35 @@ Project made entirely in C++
 
 ## Features
 
-- **Versatile `json` Class**: The `json` class can represent various JSON-like types, including objects, arrays, strings, numbers, booleans, and null values, thanks to an enumeration system.
+- **Versatile `json` Class**: The `json` class can represent various JSON-like types, including objects, arrays, strings, numbers, booleans, and null values, thanks to an enumeration system:
+```cpp
+enum type {
+    jnull,
+    jboolean,
+    jnumber,
+    jstring,
+    jlist,
+    jdict
+};
+
+struct json::impl{
+    type t;
+    double d;
+    bool b;
+    std::string s;
+
+    //heads and tails
+    lista_json head;
+    lista_json tail;
+
+    dizionario head_dict;
+    dizionario tail_dict;
+}
+```
 
 - **Custom Iterator**: The source file includes a custom iterator that simplifies the process of traversing JSON-like objects and arrays, allowing you to easily access and manipulate JSON-like data.
 
-- **Lightweight and Efficient**: The JSON-Parser source file is designed to be lightweight and efficient, making it suitable for use in resource-constrained environments.
+- **Lightweight and Efficient**
 
 ## Usage
 
@@ -28,63 +52,25 @@ To use the JSON-Parser source file in your C++ project, follow these steps:
    #include "json_parser.h"
    ```
 
-3. Create a `json` object and parse JSON-like data:
+3. Create a `json` object and parse JSON-like data manually or reading another file:
 
    ```cpp
-   json data = json::parse("{\"name\": \"John\", \"age\": 30}");
+   //example of a list
+   json j;
+   j.set_list();
+   j.push_back("first element");
+   //it can also push back a nested list
+   json nested;
+   nested.set_list();
+   nested.push_back("first nested element");
+   nested.push_back(false);
+   j.push_back(nested);
+
+   //to read a file
+   std::ifstream file("filename.json");
+   file>>j;
    ```
-
-4. Use the `json` object and custom iterators to work with JSON-like data:
-
-   ```cpp
-   std::string name = data["name"].get<std::string>();
-   int age = data["age"].get<int>();
-   ```
-
-5. Build and run your C++ project.
-
-For more detailed usage examples and documentation, please refer to the [Wiki](https://github.com/yourusername/JSON-Parser/wiki).
-
-## Examples
-
-```cpp
-#include <iostream>
-#include "json_parser.h"
-
-int main() {
-    // Parse JSON-like data
-    json data = json::parse("{\"name\": \"John\", \"age\": 30}");
-
-    // Access and print values
-    std::string name = data["name"].get<std::string>();
-    int age = data["age"].get<int>();
-
-    std::cout << "Name: " << name << std::endl;
-    std::cout << "Age: " << age << std::endl;
-
-    return 0;
-}
-```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-If you would like to contribute to this project, please follow our [Contribution Guidelines](CONTRIBUTING.md).
-
-## Acknowledgments
-
-- This project was inspired by the need for a lightweight and efficient JSON-like parser in C++.
-- Special thanks to the C++ community for their support and contributions.
-
-## Contact
-
-For any questions or feedback, please contact [your@email.com].
-
----
-
-**Note**: Replace `[yourusername]` with your GitHub username and `[your@email.com]` with your contact email address in the provided links and contact information.
-
-Enjoy using the JSON-Parser source file in your C++ projects!
