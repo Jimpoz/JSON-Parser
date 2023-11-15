@@ -410,7 +410,6 @@ json& json::operator=(json const& other) {
 
 //move assignment
 json& json::operator=(json &&other){
-    /*
     if (this != &other) {
         //delete pimpl;
         if(other.is_null()){
@@ -433,23 +432,6 @@ json& json::operator=(json &&other){
             other.pimpl->head_dict = other.pimpl->tail_dict = nullptr;
         }else{
             throw json_exception{"Other JSON is invalid"};
-        }
-    }
-    return *this;
-     */
-
-    //moves assignment only when the data structure inside is allocated dynamically
-    if(this != &other) {
-        if (other.is_list()) {
-            set_list();
-            this->pimpl->head = other.pimpl->head;
-            this->pimpl->tail = other.pimpl->tail;
-            other.pimpl->head = other.pimpl->head = nullptr;
-        } else if (other.is_dictionary()) {
-            set_dictionary();
-            this->pimpl->head_dict = other.pimpl->head_dict;
-            this->pimpl->tail_dict = other.pimpl->tail_dict;
-            other.pimpl->head_dict = other.pimpl->head_dict = nullptr;
         }
     }
     return *this;
