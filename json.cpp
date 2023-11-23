@@ -328,7 +328,6 @@ json::json() {
 //copy constructor
 json::json(json const& other) {
     pimpl = new impl;
-
     if (other.is_null()) {
         set_null();
     } else if (other.is_number()) {
@@ -366,8 +365,8 @@ json::json(json const& other) {
 
 //move constructor
 json::json(json&& other){
-    pimpl = other.pimpl;
-    other.pimpl = nullptr;
+    pimpl = nullptr;
+    std::swap(pimpl, other.pimpl);
 }
 
 //destructor
@@ -409,30 +408,11 @@ json& json::operator=(json const& other) {
 }
 
 //move assignment
-json& json::operator=(json &&other){
-    if (this != &other) {
-        //delete pimpl;
-        if(other.is_null()){
-            set_null();
-        }else if(other.is_bool()){
-            set_bool(other.get_bool());
-        }else if(other.is_number()){
-            set_number(other.get_number());
-        }else if(other.is_string()){
-                set_string(other.get_string());
-        }else if(other.is_list()){
-            set_list();
-            this->pimpl->head = other.pimpl->head;
-            this->pimpl->tail = other.pimpl->tail;
-            other.pimpl->head = other.pimpl->tail = nullptr;
-        }else if(other.is_dictionary()){
-            set_dictionary();
-            this->pimpl->head_dict = other.pimpl->head_dict;
-            this->pimpl->tail_dict = other.pimpl->tail_dict;
-            other.pimpl->head_dict = other.pimpl->tail_dict = nullptr;
-        }else{
-            throw json_exception{"Other JSON is invalid"};
-        }
+json& json::operator=(json&& other){
+    if(this->pimpl != other.pimpl){
+        delete pimpl;
+        pimpl = nullptr;
+        std::swap(pimpl, other.pimpl);
     }
     return *this;
 }

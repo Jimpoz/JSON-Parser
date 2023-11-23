@@ -56,7 +56,14 @@ int main()
         //std::cout<<j["jhukj"]<<std::endl;
         //std::cout<<j["second key"]<<"\n";
         //std::cout<<j["third key"]<<"\n";
+
+        json original;
+        original.set_string("oiasmd");
+        json copy_move;
+        copy_move = std::move(original);
+
         std::cout<<j<<std::endl;
+        std::cout<<copy_move<<std::endl;
         //std::cout<<j["first key"]<<"\n";
         //json j1(j);
         //std::cout<<j1;
