@@ -365,8 +365,7 @@ json::json(json const& other) {
 
 //move constructor
 json::json(json&& other){
-    pimpl = nullptr;
-    std::swap(pimpl, other.pimpl);
+    *this = std::move(other);
 }
 
 //destructor
@@ -409,10 +408,10 @@ json& json::operator=(json const& other) {
 
 //move assignment
 json& json::operator=(json&& other){
-    if(this->pimpl != other.pimpl){
+    if(this != &other){
         delete pimpl;
-        pimpl = nullptr;
-        std::swap(pimpl, other.pimpl);
+        this->pimpl = other.pimpl;
+        other.pimpl = nullptr;
     }
     return *this;
 }
@@ -581,21 +580,14 @@ void json::set_dictionary() {
 }
 
 //adds a new element at the end of the list
+//it doesn't need to go through the whole list
 void json::push_back(const json &j) {
     if(this->is_list()==false){
         throw json_exception{"not a list"};
     }else{
         if(!pimpl->head){
-            pimpl->head = new node{j, nullptr};
-            pimpl->tail = pimpl->head;
+            push_front(j);
         }else{
-            if(!pimpl->tail){
-                lista_json iter = pimpl->head;
-                while(iter->next){
-                    iter=iter->next;
-                }
-                pimpl->tail=iter;
-            }
             pimpl->tail->next = new node{j, nullptr};
             //set the new tail
             pimpl->tail = pimpl->tail->next;
@@ -873,6 +865,7 @@ std::istream& operator>>(std::istream& lhs, json& rhs) {
 }
 
 //inserts a new element in the dictionary
+//it does not need to go through the whole dictionary
 void json::insert(std::pair<std::string, json> const& p) {
     if(!this->is_dictionary()){
         throw json_exception{"Not a dictionary"};
