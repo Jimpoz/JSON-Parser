@@ -365,7 +365,8 @@ json::json(json const& other) {
 
 //move constructor
 json::json(json&& other){
-    *this = std::move(other);
+    this->pimpl= nullptr;
+    std::swap(this->pimpl, other.pimpl);
 }
 
 //destructor
@@ -410,8 +411,9 @@ json& json::operator=(json const& other) {
 json& json::operator=(json&& other){
     if(this != &other){
         delete pimpl;
-        this->pimpl = other.pimpl;
-        other.pimpl = nullptr;
+        this->pimpl= nullptr;
+        std::swap(this->pimpl, other.pimpl);
+        //other.pimpl = nullptr;
     }
     return *this;
 }
