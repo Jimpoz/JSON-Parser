@@ -2,5 +2,7 @@
   "first key": 123321.23,
   "second key": false,
   "third key": "fao",
-  "fourth key": ["test"]
+  "fourth key": {
+    "test" : "substring"
+  }
 }

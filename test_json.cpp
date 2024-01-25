@@ -31,15 +31,13 @@ int main()
 
         //std::string str{(std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()};
         //std::cout<<str<<"\n";
-        json j;
-        file >> j;
 
         /*
         j.set_list();
         json a;
         a.set_string("tes");
         j.push_back(a);
-        //std::cout<<j;
+        std::cout<<j;
         json b;
         b.set_number(230);
 
@@ -56,7 +54,7 @@ int main()
         //std::cout<<j["jhukj"]<<std::endl;
         //std::cout<<j["second key"]<<"\n";
         //std::cout<<j["third key"]<<"\n";
-
+        /*
         json original;
         original.set_string("oiasmd");
         json copy_move;
@@ -64,6 +62,8 @@ int main()
 
         std::cout<<j<<std::endl;
         std::cout<<copy_move<<std::endl;
+         */
+
         //std::cout<<j["first key"]<<"\n";
         //json j1(j);
         //std::cout<<j1;
@@ -82,8 +82,10 @@ int main()
         //j.set_string("Ciao a Tutti, \ntest della stringa con a capo");
 
         //read the string into the json object
-        //file >> j;
-
+        json j;
+        file >> j;
+        std::cout<<j["2"];
+        std::cout<<j;
         //j.set_number(314314);
         //std::cout<<j;
         //j.set_null();

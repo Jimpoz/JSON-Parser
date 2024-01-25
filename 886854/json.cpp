@@ -619,19 +619,21 @@ json const& json::operator[](std::string const& key) const {
     }else{
         //find the index == key using a boolean
         bool flag = false;
-        const_dictionary_iterator begin = begin_dictionary();
-        while(begin!= nullptr and !flag){
+        // const dictionary iterator causes error
+        //const_dictionary_iterator begin = begin_dictionary();
+        //create a tmp
+        dizionario tmp = this->pimpl->head_dict;
+        while(tmp!= nullptr and !flag){
             //if found it stops the while
-            if(begin.current->info.first==key){
+            if(tmp->info.first==key){
                 flag = true;
-            }
-            begin++;
+            }else{tmp=tmp->next;}
         }
         //if the key was not found throws an error otherwise it returns the assigned value
         if(flag==false){
             throw json_exception{"The key was not found"};
         }else{
-            return begin.current->info.second;
+            return tmp->info.second;
         }
         //throw json_exception{"Invalid key"};
     }
@@ -643,19 +645,21 @@ json& json::operator[](std::string const& key) {
     if(!is_dictionary()){
         throw json_exception{"Not a dictionary"};
     }else{
-        dictionary_iterator begin = begin_dictionary();
 
-        while(begin!= nullptr and !flag){
-            if(begin.current->info.first==key){
+        //iterator causes an error, use tmp
+        //dictionary_iterator begin = begin_dictionary();
+        dizionario tmp = this->pimpl->head_dict;
+        while(tmp!= nullptr and !flag){
+            if(tmp->info.first==key){
                 flag=true;
             }
-            begin++;
+            tmp=tmp->next;
         }
         if(flag==false){
             insert(std::pair<std::string, json> (key, json()));
             return pimpl->tail_dict->info.second;
         }else{
-            return begin.current->info.second;
+            return tmp->info.second;
         }
     }
 }
@@ -765,7 +769,7 @@ json parse(std::string& str) {
 
             size_t end_value;
             if (dict_str[pos] == '{') {
-                int count = 1; // For the opening '{'
+                int count = 1; // For the first '{'
                 end_value = pos + 1;
                 while (count > 0 && end_value < dict_str.size()) {
                     if (dict_str[end_value] == '{') count++;
@@ -776,7 +780,7 @@ json parse(std::string& str) {
                     throw json_exception{"Invalid JSON"};
                 }
             } else if (dict_str[pos] == '[') {
-                int count = 1; // For the opening '['
+                int count = 1; // For the first '['
                 end_value = pos + 1;
                 while (count > 0 && end_value < dict_str.size()) {
                     if (dict_str[end_value] == '[') count++;
