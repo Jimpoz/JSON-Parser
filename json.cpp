@@ -320,14 +320,26 @@ public:
     }
 };
 
-//default constructor
+//constructor
 json::json() {
-    pimpl = new impl;
+    // conditional jumps on values that have not been initialised
+    // therefore i need to initialize the values first
+    pimpl = new impl();
+    pimpl->t=jnull;
+    pimpl->d=0.0;
+    pimpl->s="";
+    pimpl->b=false;
+    // json list initialization
+    pimpl->head= nullptr;
+    pimpl->tail= nullptr;
+    // json dictionary initialization
+    pimpl->head_dict= nullptr;
+    pimpl->tail_dict= nullptr;
 }
 
 //copy constructor
 json::json(json const& other) {
-    pimpl = new impl;
+    pimpl = new impl();
     if (other.is_null()) {
         set_null();
     } else if (other.is_number()) {
@@ -630,7 +642,7 @@ json const& json::operator[](std::string const& key) const {
             }else{tmp=tmp->next;}
         }
         //if the key was not found throws an error otherwise it returns the assigned value
-        if(flag==false){
+        if(!flag){
             throw json_exception{"The key was not found"};
         }else{
             return tmp->info.second;
@@ -652,10 +664,9 @@ json& json::operator[](std::string const& key) {
         while(tmp!= nullptr and !flag){
             if(tmp->info.first==key){
                 flag=true;
-            }
-            tmp=tmp->next;
+            }else {tmp = tmp->next;}
         }
-        if(flag==false){
+        if(!flag){
             insert(std::pair<std::string, json> (key, json()));
             return pimpl->tail_dict->info.second;
         }else{
@@ -769,7 +780,7 @@ json parse(std::string& str) {
 
             size_t end_value;
             if (dict_str[pos] == '{') {
-                int count = 1; // For the first '{'
+                int count = 1; // For the opening '{'
                 end_value = pos + 1;
                 while (count > 0 && end_value < dict_str.size()) {
                     if (dict_str[end_value] == '{') count++;
@@ -780,7 +791,7 @@ json parse(std::string& str) {
                     throw json_exception{"Invalid JSON"};
                 }
             } else if (dict_str[pos] == '[') {
-                int count = 1; // For the first '['
+                int count = 1; // For the opening '['
                 end_value = pos + 1;
                 while (count > 0 && end_value < dict_str.size()) {
                     if (dict_str[end_value] == '[') count++;

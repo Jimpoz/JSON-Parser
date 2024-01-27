@@ -85,6 +85,7 @@ int main()
         json j;
         file >> j;
         std::cout<<j["2"];
+        std::cout<<j["third key"];
         std::cout<<j;
         //j.set_number(314314);
         //std::cout<<j;
