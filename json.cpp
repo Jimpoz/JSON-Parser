@@ -338,8 +338,11 @@ json::json() {
 }
 
 //copy constructor
+//even if the json can only be of one type always initialise the variables in order to avoid errors
 json::json(json const& other) {
     pimpl = new impl();
+    this->pimpl->t=other.pimpl->t;
+    /*
     if (other.is_null()) {
         set_null();
     } else if (other.is_number()) {
@@ -370,9 +373,35 @@ json::json(json const& other) {
             src = src->next;
         }
         pimpl->tail_dict = src;
-    } else {
-        throw json_exception{"Invalid JSON"};
+
+    }*/
+
+    this->pimpl->s=other.pimpl->s;
+    this->pimpl->d=other.pimpl->d;
+    this->pimpl->b=other.pimpl->b;
+    pimpl->head_dict = nullptr;
+
+    // list copy
+    pimpl->head = nullptr;
+    lista_json other_list = other.pimpl->head;
+    //lista_json dest = nullptr;
+    while (other_list) {
+        //use the push back instead
+        this->push_back(other_list->info);
+        other_list = other_list->next;
     }
+    pimpl->tail = other_list;
+
+
+    pimpl->head_dict = nullptr;
+    dizionario other_dict = other.pimpl->head_dict;
+    //dizionario dest = nullptr;
+    while (other_dict) {
+        //use the insert instead
+        this->insert(other_dict->info);
+        other_dict = other_dict->next;
+    }
+    pimpl->tail_dict = other_dict;
 }
 
 //move constructor

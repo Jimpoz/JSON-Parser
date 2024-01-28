@@ -86,7 +86,10 @@ int main()
         file >> j;
         std::cout<<j["2"];
         std::cout<<j["third key"];
-        std::cout<<j;
+        std::cout<<j<<"\n";
+        json j1(j);
+        std::cout<<"this is j1"<<j1;
+        std::cout<<j1.is_dictionary();
         //j.set_number(314314);
         //std::cout<<j;
         //j.set_null();
