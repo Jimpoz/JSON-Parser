@@ -44,12 +44,12 @@ struct json::impl{
 
 To use the JSON-Parser source file in your C++ project, follow these steps:
 
-1. Copy the `json_parser.cpp` and `json_parser.h` files to your project directory.
+1. Copy the `json_parser.cpp` and `json_parser.hpp` files to your project directory.
 
 2. Include the necessary header in your C++ code:
 
    ```cpp
-   #include "json_parser.h"
+   #include "json_parser.hpp"
    ```
 
 3. Create a `json` object and parse JSON-like data manually or reading another file:
